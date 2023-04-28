@@ -14,7 +14,7 @@ namespace acl_app
             
             // Replace with the name of your confidential ledger
 
-            const string ledgerName = "myLedger";
+            const string ledgerName = "https://pcuevas.confidential-ledger.azure.com";
             var ledgerUri = $"https://{ledgerName}.confidential-ledger.azure.com";
 
             // Create a confidential ledger client using the ledger URI and DefaultAzureCredential
