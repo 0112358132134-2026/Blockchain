@@ -1,50 +1,51 @@
-﻿using System.Text.Json;
-using Azure;
+﻿using Azure;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Security.ConfidentialLedger;
-using Azure.Security.ConfidentialLedger.Certificate;
+using System.Text.Json;
 
 namespace acl_app
 {
-    public class Program
+    class Program
     {
-        static void Main(string[] args)
-        {
-            
-            // Replace with the name of your confidential ledger
-
-            const string ledgerName = "https://pcuevas.confidential-ledger.azure.com";
+        static Task Main(string[] args)
+        {            
+            // Replace with the name of your confidential ledger            
+            const string ledgerName = "pcuevas";
             var ledgerUri = $"https://{ledgerName}.confidential-ledger.azure.com";
+            Console.WriteLine($"* LAB Blockchain *\n\tPablo Daniel Cuevas Paz - 1239719 \n\t{ledgerUri}\n");
 
             // Create a confidential ledger client using the ledger URI and DefaultAzureCredential
 
             var ledgerClient = new ConfidentialLedgerClient(new Uri(ledgerUri), new DefaultAzureCredential());
 
             // Write to the ledger
-
+            Console.WriteLine($"Writing in ledger...");
             Operation postOperation = ledgerClient.PostLedgerEntry(
                 waitUntil: WaitUntil.Completed,
                 RequestContent.Create(
                     new { contents = "Hello world!" }));
-            
+
             // Access the transaction ID of the ledger write
 
             string transactionId = postOperation.Id;
             Console.WriteLine($"Appended transaction with Id: {transactionId}");
 
 
-            // Use the transaction ID to read from the ledger
+            // Control the status of transaction
+            Response ledgerResponse = ledgerClient.GetLedgerEntry(transactionId);
+            JsonElement result = JsonDocument.Parse(ledgerResponse.ContentStream).RootElement;
+            Console.WriteLine("\t" + result.GetProperty("state").ToString());
 
-            Response ledgerResponse = ledgerClient.GetLedgerEntry(transactionId, collectionId);
+            Response ledgerResponse2 = ledgerClient.GetLedgerEntry(transactionId);
+            JsonElement result2 = JsonDocument.Parse(ledgerResponse2.ContentStream).RootElement;
+            Console.WriteLine("\t" + result2.GetProperty("state").ToString());
 
-            string? entryContents = JsonDocument.Parse(ledgerResponse.Content)
-                .RootElement
-                .GetProperty("entry")
-                .GetProperty("contents")
-                .GetString();
+            JsonElement result3 = JsonDocument.Parse(postOperation.WaitForCompletionResponse().ContentStream).RootElement;
+            Console.WriteLine("\t" + result3.GetProperty("state").ToString());
 
-            Console.WriteLine(entryContents);
+            Console.ReadLine();
+            return default;
         }
     }
 }
